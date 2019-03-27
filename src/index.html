@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store" />
+<title>주소록 관리</title>
+<link rel="stylesheet" type="text/css" href="css/ion-contacts-sheet.css">
+<link rel="stylesheet" type="text/css" href="css/group-menu.css">
+<link rel="stylesheet" href="css/jquery-ui.css">
+<link rel="stylesheet" href="css/menu1.css">
+<link rel="stylesheet" href="css/toolbar.css">
+
+<script type="text/javascript" src="js/jquery-1.11.3.js"></script>
+<script type="text/javascript" src="js/jquery-ui.js"></script>
+
+<script type="text/javascript" src="interface.js"></script>
+<script type="text/javascript" src="js/ion-contacts-sheet.js"></script>
+
+<script type="text/javascript" src="js/menu1.js"></script>
+<script type="text/javascript" src="js/toolbar.js"></script>
+<script type="text/javascript" src="js/action-handler.js"></script>
+<script type="text/javascript" src="js/undo-manager.js"></script>
+<script type="text/javascript" src="js/contact-sheet.js"></script>
+<script type="text/javascript" src="js/window-column.js"></script>
+<script type="text/javascript" src="js/window-row-index.js"></script>
+<script type="text/javascript" src="js/window-cell.js"></script>
+<script type="text/javascript" src="js/window-pager.js"></script>
+
+<script type="text/javascript" src="js/contact.js"></script>
+<script type="text/javascript" src="js/contact-io.js"></script>
+<script type="text/javascript" src="js/cell-data.js"></script>
+<script type="text/javascript" src="js/group-menu.js"></script>
+<script type="text/javascript" src="js/table-handler.js"></script>
+<script type="text/javascript" src="js/key-event-handler.js"></script>
+<style type="text/css">
+
+* {
+ 	-moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+     box-sizing: border-box;
+     font-family: "Nanum Gothic", sans-serif;
+}
+
+.circle-button {
+	background-color: #009688;
+	border-radius: 50%;
+	display: inline-block;
+	text-align: center;
+	vertical-align: middle;
+	text-decoration: none;
+	padding: 8px 16px;
+	white-space: nowrap;
+	cursor: pointer;
+	font-weight: bolder;
+	color: white;
+	width: 52px;
+	height: 52px;
+	border: none;
+}
+
+.circle-button:focus {
+	outline: 0;
+}
+.circle-button:hover {
+	background-color: #4caf50;
+}
+.circle-button:active {
+	background-color: #009688;
+}
+
+
+.circle-button-large {
+	font-size: 24px;
+}
+
+#option-dialog table {
+	font-size: 14px;
+}
+
+#option-dialog table td:nth-child(1) {
+	text-align: right;
+	padding-right: 10px;
+}
+
+#option-dialog table input[type="text"]{
+	width: 80px;
+}
+
+.samll-menu-icon {
+	font-size:12px; 
+	margin: 0 5px;
+	color: #888;
+}
+.small-menu {
+	color: #888;
+}
+.small-menu:hover {
+	text-decoration: none;
+	color: #222;
+}
+.ipt {
+	border:1px solid #d5d5d5;
+  height:30px;
+  line-height:20px;
+  padding:5px 10px;
+  font-size:14px;
+  color: #000;
+  margin:2px 0;
+  display:inline-block;
+  vertical-align:middle;
+}
+h1.sub_title {
+	font-size:20px;
+	color:#000;
+	border-bottom:1px solid #cecece;
+	margin-top:50px;
+	padding-bottom:20px;
+}
+body, html {
+	height: 100%;
+}
+
+#wait-back {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1000;
+	height: 100%;
+	background: rgba(0,0,0,0.2);
+}
+.loader {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div style="position:relative; width:95%; height:100%; margin: 0 auto;">
+	<div class="nav-container">
+		<div class="nav-icon-container">
+			<img class="nav-icon" src="img/document-xxl.png">
+		</div>
+		<div class="nav-title"><span style="margin-left: 5px; margin-bottom: 4px; display: inline-block">Someone's ContactSheet</span></div>
+		<div class="nav-main-menu"></div>
+		<div class="nav-toolbar"></div>
+	</div>
+
+	<!--<div id="doc-header" style="width:100%; height: 70px; border-bottom: 2px solid #aaa; padding: 20px 0">-->
+		<!--<h1 style="margin: 0">Contact Sheet for Google</h1>-->
+		<!--<div style="padding-bottom: 10px; text-align: right; margin-top:-20px">-->
+			<!--<form name="form-navi" method="get" action="">-->
+				<!--<input type="text" class="ipt" name="keyword"><select id="group-selector" name="groupId" class="ipt" style="width: 100px; margin: 0 10px">-->
+					<!--<option value="">All</option>-->
+				<!--</select><button id="btn-submit" type="submit" class="ipt">Query</button>-->
+				<!--<button id="btn-refresh" type="button" class="ipt">Reload</button>-->
+				<!--<button id="btn-find" type="button" class="ipt">Find</button>-->
+				<!--<button id="btn-option" type="button" class="ipt">Setting</button>-->
+				<!--<button id="btn-save" type="button" class="ipt">Save</button>-->
+			<!--</form>-->
+		<!--</div>-->
+	<!--</div>-->
+	<div style="position:absolute; width:100%; top:108px; bottom: 50px">
+		<div class="table_wrap" style="position:absolute; top:0px; bottom:0; width: 100%; font-size: 14px"></div>
+	</div>
+	<div style="position: absolute; bottom: 50px; right: 20px">
+		<button id="btn-add-contact" class="circle-button circle-button-large" style="z-index: 1000">+</button>
+	</div>
+	<input type="text" id="test-input" style="width: 0; height: 0; border: 0">
+<!-- container 끝  -->
+</div>
+
+<div id="find-dialog" title="Find/Replace" style="display:none">
+<form name="form-find">
+	<table style="width:280px">
+		<tr>
+			<td style="width:40%">Find:</td>
+			<td style="width:60%"><input type="text" name="txtFind"></td>
+		</tr>
+		<tr>
+			<td>Replace:</td>
+			<td><input type="text" name="txtReplace"></td>
+		</tr>
+		<tr>
+			<td colspan="2" style="padding:0">
+				<table style="width: 100%">
+					<tr>
+						<td style="width:50%; vertical-align: top;"><input type="radio" name="radioDirection" value="1" id="find-dialog-r1" checked="checked"><label for="find-dialog-r1">Forward</label><br>
+							<input type="radio" name="radioDirection" value="2" id="find-dialog-r2"><label for="find-dialog-r2">Backward</label></td>
+						<td style="width:50%; vertical-align: top"><input type="radio" name="radioScope" id="find-dialog-r3" value="1" checked="checked"><label for="find-dialog-r3">All Page</label><br>
+							<input type="radio" name="radioScope" id="find-dialog-r4" value="2"><label for="find-dialog-r4">This Page</label><br>
+							<input type="radio" name="radioScope" id="find-dialog-r5" value="3"><label for="find-dialog-r5">Selected Area</label></td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</form>
+</div>
+
+<div id="group-dialog" title="Contact groups" style="background-color:white; display: none">
+	<div class="group-menu" style="width:100%; padding: 0px; overflow: auto;">
+		<ul class="options" id="ul-group">
+		</ul>
+		<div style="font: 0; clear: both"></div>
+	</div>
+</div>
+
+<div id="option-dialog" title="Field Option" style="background-color: white; display: none">
+<form name="form-option">
+  <table id="field-option-list">
+  	<tr>
+  		<th style="width:50px">Selection</th>
+  		<th style="width:140px">Field name</th>
+  		<th style="width:50px">Width</th>
+  	</tr>
+</table>
+  </form>
+</div>
+
+<div id="cell-input-container" style="left: -500px; top: 0px">
+	<input id="cell-input" editing="false">
+</div>
+
+<div id="cell-ta-container" style="left: -500px; top:0px">
+	<textarea id="cell-ta" editing="false"></textarea>
+</div>
+
+<div id="context-menu1" class="context-menu" style="display:none">
+	<div class="menu-item" id="context-menu-undo">Undo</div>
+	<div class="menu-item" id="context-menu-redo">Redo</div>
+	<hr>
+	<div class="menu-item" id="context-menu-copy">Copy</div>
+	<div class="menu-item" id="context-menu-cut">Cut</div>
+	<div class="menu-item" id="context-menu-paste">Paste</div>
+	<hr>
+	<div class="menu-item" id="context-menu-delete">Delete</div>
+	<div class="menu-item" id="context-menu-selrow">Select full row</div>
+	<div class="menu-item" id="context-menu-group">Group</div>
+</div>
+
+<div id="context-menu2" class="context-menu" style="display:none">
+	<div class="menu-item" id="context-menu-undo">Undo</div>
+	<div class="menu-item" id="context-menu-redo">Redo</div>
+	<hr>
+	<div class="menu-item" id="context-menu-copy">Copy</div>
+	<div class="menu-item" id="context-menu-paste">Paste</div>
+	<div class="menu-item" id="context-menu-delete">Delete</div>
+	<hr>
+	<div class="menu-item" id="context-menu-group">Groups</div>
+</div>
+</body>
+</html>

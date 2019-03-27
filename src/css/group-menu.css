@@ -1,0 +1,56 @@
+@charset "UTF-8";
+.group-menu-wrap {
+  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  position: absolute;
+  display: none;
+  overflow:auto;
+  max-height: 300px;
+}
+
+.group-menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+.group-menu li {
+	padding: 5px 20px 5px 10px;
+	font-size: 14px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+.group-menu li:hover {
+	background: rgba(0, 0, 0, 0.2)
+}
+
+.group-menu li.active {
+	background: rgba(0, 0, 0, 0.2)
+}
+
+.group-menu input[type="checkbox"] {
+    display:none;
+}
+
+.group-menu input[type="checkbox"] + label {
+    color:#222;
+    font-family:Arial, sans-serif;
+    cursor: pointer;
+}
+
+.group-menu input[type="checkbox"] + label span {
+    display:inline-block;
+    width:19px;
+    height:19px;
+    margin:-2px 10px 0 0;
+    vertical-align:middle;
+    background:url(unchecked-checkbox.png) left top no-repeat;
+    background-size: 19px 19px;
+    cursor:pointer;
+}
+.group-menu input[type="checkbox"]:checked + label span {
+    background:url(checked-checkbox.png) 0px top no-repeat;
+    background-size: 19px 19px;
+}
+/*.group-menu input[type="checkbox"]:checked + label span {*/
+    /*background:url(check_radio_sheet.png) -19px top no-repeat;*/
+/*}*/

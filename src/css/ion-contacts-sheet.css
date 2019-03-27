@@ -1,0 +1,256 @@
+@charset "UTF-8";
+
+body {
+	margin: 0;
+	padding: 0;
+}
+.ion-sheet-container {position:relative; border: 1px solid #eee; width:100%; height:100%}
+.ion-sheet-header {width: 100%; height:50px; position: relative}
+.ion-sheet-body {position:absolute; top:50px; bottom:50px; width: 100%;}
+.ion-sheet-footer {position:absolute; bottom:0; width: 100%; height: 50px; display: table-cell; text-align: center; padding-top: 4px}
+.ion-sheet-footer .page-nav-container {float: right}
+
+.ion-sheet-left-top {width: 100px; height: 50px; background-color: #fcfcfc; float: left; border-bottom: 1px solid #eee}
+.ion-sheet-left-top table {width: 100%; height: 100%; border-collapse: collapse}
+.ion-sheet-left-top table td {width: 100%; height: 100%; border: 1px solid #eee;}
+.ion-selected-sheet {border-color: red !important}
+
+.ion-sheet-container .column-container {margin-left: auto; height: 50px; background-color: #fcfcfc; display: block; overflow: hidden; border-bottom: 1px solid #eee}
+.ion-sheet-container .column-container table {height: 100%}
+.ion-sheet-container .column-container table td {height: 100%}
+.ion-sheet-container .column-container table td.sortDsc {
+	padding-right: 20px;
+	background-repeat: no-repeat;
+	background-position: right center;
+	background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+}
+.ion-sheet-container .column-container table td.sortAsc {
+	padding-right: 20px;
+	background-repeat: no-repeat;
+	background-position: right center;
+	background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+}
+.tbl-column td.current-col {background-color: #E6E6FA !important}
+.tbl-column td span {cursor: pointer}
+
+.tbl-column {border-spacing: 0; border: 0; border-collapse: collapse}
+.tbl-column td {
+	white-space: nowrap;
+	overflow: hidden;
+	padding: 0;
+	vertical-align: middle;
+	text-align: center;
+	border-spacing: 0;
+	border-collapse: separate;
+	box-sizing: border-box;
+	border: 1px solid #eee;
+}
+
+.row-container {width: 100px; height: 100%; background-color: #fcfcfc; float: left; overflow: hidden}
+.tbl-row {border-spacing: 0; border: 0; width: 100%; min-height: 32px; padding: 1px; border-collapse: separate}
+.tbl-row td {width: 100%; height: 30px; border: 1px solid #eee; text-align: center; padding: 2px; vertical-align: middle; cursor: pointer; ; box-sizing: border-box}
+.tbl-row .current-row {background-color: #E6E6FA !important}
+.tbl-row .modified {color: red !important;}
+
+.cell-container {margin-left: auto; height: 100%; display: block; overflow: auto; position: relative;}
+.cell-container .cell-select-handle { position: absolute; width: 6px; height: 6px; border: 3px solid LightSteelBlue; cursor: crosshair }
+.tbl-cell { border-spacing: 0; border: 0; padding: 1px; margin: 0; border-collapse: separate }
+.tbl-cell input:focus {outline: none}
+.tbl-cell textarea {resize: none; overflow: hidden;}
+.tbl-cell textarea:focus {outline: none}
+.tbl-cell td {
+	box-sizing: border-box;
+	height: 30px;
+	max-height: 30px;
+	border-collapse: collapse;
+	border: 1px solid #eee;
+	/* border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee; */
+	vertical-align: middle;
+	padding: 2px;
+	user-select: none;
+}
+.tbl-cell td.singleline-text {
+	overflow: hidden;
+	white-space: nowrap;
+	-moz-text-overflow: ellipsis;
+	-ms-text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+}
+.tbl-cell td.multiline-text {
+	/*overflow: hidden;
+	white-space: nowrap;
+	-moz-text-overflow: ellipsis;
+	-ms-text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;*/
+}
+
+.tbl-cell .selected-cell { background-color: MintCream }
+/*.tbl-cell .current-cell { border: 2px solid LightSteelBlue !important}*/
+
+.tbl-cell .selected-cell-lefttop { border-left: 1px solid LightSteelBlue; border-top: 1px solid LightSteelBlue}
+.tbl-cell .selected-cell-righttop { border-right: 1px solid LightSteelBlue; border-top: 1px solid LightSteelBlue}
+.tbl-cell .selected-cell-leftbottom { border-left: 1px solid LightSteelBlue; border-bottom: 1px solid LightSteelBlue}
+.tbl-cell .selected-cell-rightbottom { border-right: 1px solid LightSteelBlue; border-bottom: 1px solid LightSteelBlue}
+.tbl-cell .selected-cell-left { border-left: 1px solid LightSteelBlue;}
+.tbl-cell .selected-cell-right { border-right: 1px solid LightSteelBlue;}
+.tbl-cell .selected-cell-top { border-top: 1px solid LightSteelBlue; }
+.tbl-cell .selected-cell-bottom { border-bottom: 1px solid LightSteelBlue;}
+.tbl-cell .modified {color: red !important;}
+
+.col-resize-handle {position: absolute; width: 7px; height: 50px; cursor: ew-resize; margin-left: -3px; z-index: 2}
+
+#cell-marker { border: 2px solid lightsteelblue; position: absolute; width: 0; height: 0; pointer-events: none; }
+
+.pagination {
+    display: inline-block;
+    margin: auto;
+}
+
+.pagination a {
+    color: black;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+}
+
+.pagination a.active {
+    background-color: #E6E6FA;
+    color: white;
+}
+
+.pagination a:hover:not(.active) {background-color: #ddd;}
+
+.context-menu {
+	position: absolute; 
+	left: 100px; 
+	top: 100px; 
+	border: 1px solid #ccc; 
+	padding: 3px 5px; 
+	background-color: white;
+	font-size: 14px; 
+	min-width: 150px;
+	box-shadow: 3px 3px rgba(128,128,128,0.2)
+}
+
+.context-menu .menu-item {
+	height: 20px;
+	margin-top: 2px;
+	color: #222222;
+	font-weight: bold;
+}
+.context-menu .menu-item2 {
+	height: 20px;
+	margin-top: 2px;
+	color: gray;
+}
+.context-menu .menu-item:hover {
+	background-color: #6CB5FF;
+	cursor: pointer;
+}
+.context-menu .menu-item .disable {
+	color: grey !important;
+}
+
+#cell-input-container {
+	position: absolute;
+	left: 100px;
+	top: 100px;
+	border: none;
+	background-color: transparent;
+}
+#cell-input {
+	border: none;
+	font-size: 14px;
+	width: 100%;
+	height: 100%;
+	outline: none;
+}
+
+#cell-ta-container {
+	position: absolute;
+	left: 100px;
+	top: 100px;
+	border: none;
+	background-color: transparent;
+	padding: 2px 0px;
+}
+#cell-ta {
+	border: none;
+	font-size: 14px;
+	width: 100%;
+	height: 100%;
+	outline: none;
+	resize: none;
+	overflow: hidden;
+	min-height: 27px;
+	background-color: transparent;
+}
+
+#find-dialog table td {
+	padding: 2px 5px;
+}
+
+button.disabled {
+	color: #ccc;
+}
+
+#field-option-list input {
+	height: 24px;
+	outline: none;
+}
+
+/* 
+#sheet-container {border: 1px solid #eee}
+#sheet-header {width: 100%}
+.sheet-left-top {width: 100px; height: 50px; background-color: #fcfcfc; float: left; border-bottom: 1px solid #eee}
+.sheet-left-top table {width: 100%; height: 100%}
+.sheet-left-top table td {width: 100%; height: 100%; border-right: 1px solid #eee;}
+
+
+#sheet-header table {border-collapse: collapse; border: 0}
+#sheet-header table td {border: 1px solid #eee; text-align: center; padding: 0;}
+
+.col-resize-handle {position: absolute; width: 7px; height: 50px; cursor: ew-resize; margin-left: -3px; z-index: 2}
+
+#sheet-body {width: 100%}
+#row-container {width: 100px; height: 100%; background-color: #fcfcfc; float: left; overflow: hidden}
+#row-container table {border-spacing: 0; border: 0; width: 100%}
+#row-container table td {width: 100%; border-right: 1px solid #eee; text-align: center; padding: 0}
+#cell-container {margin-left: auto; height: 100%; display: block; overflow: auto;}
+
+#tbl-cell { border-spacing: 0;}
+#tbl-column td { white-space: nowrap; overflow: hidden}
+#tbl-cell td {
+	overflow: hidden;
+	white-space: nowrap;
+	-moz-text-overflow: ellipsis;
+	-ms-text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+	border-left: 1px solid #eee;
+	border-top: 1px solid #eee;
+} */
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* 
+#tbl-cell .selected-cell { background-color: MintCream }
+#tbl-cell .current-cell { border: 2px solid LightSteelBlue !important}
+
+#tbl-cell .selected-cell-lefttop { border-left: 1px solid LightSteelBlue; border-top: 1px solid LightSteelBlue}
+#tbl-cell .selected-cell-righttop { border-right: 1px solid LightSteelBlue; border-top: 1px solid LightSteelBlue}
+#tbl-cell .selected-cell-leftbottom { border-left: 1px solid LightSteelBlue; border-bottom: 1px solid LightSteelBlue}
+#tbl-cell .selected-cell-rightbottom { border-right: 1px solid LightSteelBlue; border-bottom: 1px solid LightSteelBlue}
+#tbl-cell .selected-cell-left { border-left: 1px solid LightSteelBlue;}
+#tbl-cell .selected-cell-right { border-right: 1px solid LightSteelBlue;}
+#tbl-cell .selected-cell-top { border-top: 1px solid LightSteelBlue; }
+#tbl-cell .selected-cell-bottom { border-bottom: 1px solid LightSteelBlue;} */

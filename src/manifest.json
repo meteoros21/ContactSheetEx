@@ -1,0 +1,24 @@
+{
+    "name": "Contact Sheet for Google",
+    "version": "1.15",
+    "minimum_chrome_version": "29",
+    "description": "Google contacts manager",
+    "manifest_version": 2,
+    "permissions": ["activeTab", "declarativeContent", "storage", "identity", "https://www.google.com/*"],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "icons": {
+        "16": "icon_16.png",
+        "128": "icon_128.png"
+    },
+    "browser_action": {
+        "default_icon": "icon_16.png"
+    },
+    "key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp1tUAA5gKLHTHeeQxgFBgLSnvJeE+fWXJSsIDRl+GZml2kEHjRQX1eVlWCFHpwsH1XJYaeex0XRk69iU1jQ3JFE5Cfn5OOFTpJ0GhP1hbNBZWBbYvITeKwHsZM7CCZWHbKvkv6zbZIiGHidFFnEknPX7EMA6S0ZPrf1fBucqP51jzVW2H1/3thYz3jQi/hKizXtXyPPgIz3W1y7jdY2XS7nd8ablqyEfHsIMpilf0csqpND+l0TPwARxWYQj2OwRohjID0GuOoNOqR4OGuAzhe8ZK2BtPwO+1Gi/naF4C3i2sT+Hs6glGukHB0w26mfFP7y7BXj1TjmrdCHSPYz8KwIDAQAB",
+    "oauth2": {
+		"client_id": "798905190586-trm426m9fl504aioe0na75elb7colijp.apps.googleusercontent.com",
+		"scopes":["https://www.google.com/m8/feeds/", "https://www.googleapis.com/auth/contacts.readonly"]
+	}
+}

@@ -1,0 +1,98 @@
+html, body { margin: 0; padding: 0}
+.nav-container {
+    width: 100%;
+    position: relative;
+    padding-top: 9px;
+    box-sizing: border-box;
+}
+
+.nav-icon-container { float: left; padding: 4px 10px; margin-left: 9px; margin-right: 3px}
+.nav-icon { width: 34px; margin-top: 4px }
+.nav-title {font-size: 14.5pt; padding-top: 2px; letter-spacing: -1px; font-family: Verdana, Arial, Helvetica, sans-serif}
+.nav-title span {margin-bottom: 3px}
+
+.menu-item-container {
+    list-style: none;
+    margin: 5px 0;
+    padding: 0 6px;
+}
+.menu-item-container .menu-item {
+    font-size: 10pt;
+    display: inline-block;
+    margin: 0 8px 0 0;
+    text-align: left;
+    padding: 0;
+}
+.menu-item-container .menu-item span:hover {
+    background-color: azure;
+    cursor: pointer;
+}
+.menu-item-container .menu-item span {
+    padding: 3px 5px;
+}
+
+
+
+
+.popup-menu {
+    position: absolute;
+    background-color: white;
+}
+.popup-menu1 {
+    display: table;
+    table-layout: fixed;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 12px 10px;
+    border-radius: 3px;
+    border-spacing: 0;
+    /*-webkit-box-shadow: 2px 3px 3px rgba(100,100,100,0.1);*/
+    box-shadow: 1px 2px 3px rgba(33, 33, 33, 0.2);
+    font-size: 10pt;
+}
+
+.popup-menu1 tr {
+    cursor: pointer;
+}
+.popup-menu1 tr.disabled td {
+    color: #dddddd;
+}
+.popup-menu1 tr.disabled:hover {
+    background-color: white;
+}
+.popup-menu1 tr.sep {
+    cursor: auto;
+}
+.popup-menu1 tr.sep td {
+    padding: 0px 2px !important;
+}
+.popup-menu1 tr:hover {
+    background-color: lightcyan;
+}
+.popup-menu1 tr.sep:hover {
+    background-color: transparent;
+}
+.popup-menu1 td {
+    padding: 6px 2px;
+    white-space: nowrap;
+}
+.popup-menu1 td:first-child {
+    width: 24px;
+}
+.popup-menu1 .menu-icon {
+    width: 18px;
+}
+.popup-menu1 td:last-child {
+    padding-left: 12px;
+    text-align: right;
+    color: darkgray;
+}
+.more-menu {
+    background-image: url("play-button.png");
+    background-position: calc(100% - 8px) center;
+    background-repeat: no-repeat;
+    background-size: 10px;
+    padding-right: 20px;
+    opacity: 0.4;
+}
+
