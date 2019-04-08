@@ -1021,7 +1021,7 @@ function CellWindow(contactSheet)
         }
 
         this.tableCell.find('tr:nth-child(' + row + ')').after(tr);
-        this.sheetInfo.rowIndexWindow.insertRow(row, 1);
+        this.sheetInfo.rowIndexWindow.insertRow(row, 1, contact.modified);
 
         this.recalcRowHeight(row);
     }
@@ -1108,7 +1108,7 @@ function CellWindow(contactSheet)
         {
             var row = selectedRows[i];
             var contactId = $(this.tableCell[0].rows[row]).attr('contact-id');
-            var contact = this.sheetInfo.getContactById(contactId);
+            var contact = this.contactSheet.getContactById(contactId);
 
             this.contactSheet.deleteContact(contactId);
             this.deleteContact(contactId);

@@ -128,9 +128,6 @@ function UndoManager(contactSheet)
         var lastAction = undoData.actionList[0];
         var lastRowIdx = lastAction['contact-idx'];
 
-        if (undoData.page != this.sheetInfo.currentPage)
-            this.contactSheet.setPage(undoData['page']);
-
         for (var i = undoData.actionList.length-1; i >= 0; i--)
         {
             var action = undoData.actionList[i];
@@ -138,20 +135,31 @@ function UndoManager(contactSheet)
             var contact = action['contact'];
 
             this.contactSheet.addContact(contactIdx, contact);
-            this.sheetInfo.cellWindow.addContact(contactIdx, contact);
+
+            // 페이지가 이동되므로 화면에 갱신이 필요없다.
+            if (undoData.page == this.sheetInfo.currentPage)
+                this.sheetInfo.cellWindow.addContact(contactIdx, contact);
         }
 
-        this.sheetInfo.cellWindow.hideCellMarker();
-        if (this.sheetInfo.cellWindow.tableCell[0].rows.length > this.sheetInfo.rowsPerPage + 1)
+        if (undoData.page != this.sheetInfo.currentPage)
         {
-            var cnt = this.sheetInfo.cellWindow.tableCell[0].rows.length - this.sheetInfo.rowsPerPage - 1;
-            for (var i = 0; i < cnt; i++)
-            {
-                var idx = this.sheetInfo.cellWindow.tableCell[0].rows.length - 2;
-                this.sheetInfo.cellWindow.deleteRow(idx);
-            }
+            this.contactSheet.setPage(undoData['page']);
+            var row = lastRowIdx - (undoData.page - 1) * this.sheetInfo.rowsPerPage;
+            this.sheetInfo.cellWindow.setCurrentCell(0, row);
         }
-        this.sheetInfo.cellWindow.showCellMarker();
+        else
+        {
+            this.sheetInfo.cellWindow.hideCellMarker();
+            if (this.sheetInfo.cellWindow.tableCell[0].rows.length > this.sheetInfo.rowsPerPage + 1) {
+                var cnt = this.sheetInfo.cellWindow.tableCell[0].rows.length - this.sheetInfo.rowsPerPage - 1;
+                for (var i = 0; i < cnt; i++) {
+                    var idx = this.sheetInfo.cellWindow.tableCell[0].rows.length - 2;
+                    this.sheetInfo.cellWindow.deleteRow(idx);
+                }
+            }
+            var row = lastRowIdx - (undoData.page - 1) * this.sheetInfo.rowsPerPage;
+            this.sheetInfo.cellWindow.setCurrentCell(0, row);
+        }
     }
 
     this.redoWriteAction = function (undoData)

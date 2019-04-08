@@ -60,13 +60,20 @@ function RowIndexWindow(contactSheet)
         $(this.tableRow[0].rows[row].cells[0]).addClass('current-row');
     }
 
-    this.insertRow = function(idx, count)
+    this.insertRow = function(idx, count, modified)
     {
         if (typeof count == 'undefined')
             count = 1;
+        if (typeof modified == 'undefined')
+            modified = true;
 
         for (var i = 0; i < count; i++)
-            this.tableRow.find('tr:nth-child(' + idx + ')').after('<tr><td class="modified"></td></tr>');
+        {
+            if (modified)
+                this.tableRow.find('tr:nth-child(' + idx + ')').after('<tr><td class="modified"></td></tr>');
+            else
+                this.tableRow.find('tr:nth-child(' + idx + ')').after('<tr><td></td></tr>');
+        }
 
         for (var i = idx; i < this.tableRow[0].rows.length; i++)
         {
