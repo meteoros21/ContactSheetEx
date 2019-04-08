@@ -6,9 +6,9 @@ function UndoManager(contactSheet)
     this.undoBuffer = new Array();
     this.redoBuffer = new Array();
 
-    this.addUndoAction = function(action)
+    this.addUndoData = function(undoData)
     {
-        this.undoBuffer.push(action);
+        this.undoBuffer.push(undoData);
         this.redoBuffer = new Array();
     }
 
@@ -26,20 +26,20 @@ function UndoManager(contactSheet)
     {
         if (this.undoBuffer != null && this.undoBuffer.length > 0)
         {
-            var action = this.undoBuffer.pop();
-            this.redoBuffer.push(action);
+            var undoData = this.undoBuffer.pop();
+            this.redoBuffer.push(undoData);
 
-            if (action.type === 'write' && action.actionList != null)
+            if (undoData.type === 'write' && undoData.actionList != null)
             {
-                this.undoWriteAction(action);
+                this.undoWriteAction(undoData);
             }
-            else if (action.type === 'pasteRow' && action.actionList != null)
+            else if (undoData.type === 'pasteRow' && undoData.actionList != null)
             {
-                this.undoPasteRowAction(action);
+                this.undoPasteRowAction(undoData);
             }
-            else if (action.type == 'deleteRow' && action.actionList != null)
+            else if (undoData.type == 'deleteRow' && undoData.actionList != null)
             {
-                this.undoDeleteRowAction(action);
+                this.undoDeleteRowAction(undoData);
             }
         }
     }
@@ -48,20 +48,20 @@ function UndoManager(contactSheet)
     {
         if (this.redoBuffer != null && this.redoBuffer.length > 0)
         {
-            var action = this.redoBuffer.pop();
-            this.undoBuffer.push(action);
+            var undoData = this.redoBuffer.pop();
+            this.undoBuffer.push(undoData);
 
-            if (action.type === 'write' && action.actionList != null)
+            if (undoData.type === 'write' && undoData.actionList != null)
             {
-                this.redoWriteAction(action);
+                this.redoWriteAction(undoData);
             }
-            else if (action.type === 'pasteRow' && action.actionList != null)
+            else if (undoData.type === 'pasteRow' && undoData.actionList != null)
             {
-                this.redoPasteRowAction(action);
+                this.redoPasteRowAction(undoData);
             }
-            else if (action.type == 'deleteRow' && action.actionList != null)
+            else if (undoData.type === 'deleteRow' && undoData.actionList != null)
             {
-                this.redoDeleteRowAction(action);
+                this.redoDeleteRowAction(undoData);
             }
         }
     }
@@ -72,18 +72,7 @@ function UndoManager(contactSheet)
         var cellWindow = sheetInfo.cellWindow;
 
         var lastAction = undoData.actionList[0];
-        var lastRowIdx = lastAction.contactIdx;
-        var lastPage = Math.ceil((lastRowIdx - 1) / sheetInfo.rowsPerPage);
-        var needSortData = false;
-
         var lastContactId = lastAction.contactId;
-        lastRowIdx = cellWindow.getRowIndexByContactId(lastContactId);
-
-        if (undoData.sortKey != null && undoData.sortType != null &&
-            (undoData.sortKey !== sheetInfo.sortInfo['key'] || undoData.sortType !== sheetInfo.sortInfo['type']))
-        {
-            needSortData = true;
-        }
 
         for (var i = undoData.actionList.length-1; i >= 0; i--)
         {
@@ -92,57 +81,114 @@ function UndoManager(contactSheet)
             // 데이터가 새로 추가된 경우
             if (action.rowAdded)
             {
-                this.contactSheet.deleteContact(action.contactId);
-
-                if (!needSortData)
-                    this.cellWindow.deleteContact(action.contactId);
+                this.contactSheet.deleteContact(action.contactId, false);
+                cellWindow.deleteContact(action.contactId);
             }
             // 데이터가 수정된 경우
             else
             {
                 var contact = this.contactSheet.getContactById(action.contactId);
-                var key = sheetInfo.getColumnKey(action.col);
-                contact.setValue(key, action.oldCellData.value);
-
-                if (!needSortData)
-                    cellWindow.redrawContact(action.contactId);
+                contact.setData(action.oldCellData);
+                cellWindow.redrawContact(action.contactId, contact);
             }
         }
 
-        // 정렬이 필요한 경우
-        if (needSortData)
+        cellWindow.setCurrentCellByContactId(lastContactId, lastAction.col);
+    }
+
+    this.undoPasteRowAction = function (undoData)
+    {
+        var sheetInfo = this.contactSheet.sheetInfo;
+        var cellWindow = sheetInfo.cellWindow;
+
+        var firstAction = undoData.actionList[0];
+        var rowIdx = firstAction['row-idx'];
+        var page = firstAction['page'];
+
+        for (var i = 0; i < undoData.actionList.length; i++)
         {
-            this.contactSheet.sortData(undoData.sortKey, undoData.sortType, lastPage);
-            this.cellWindow.redraw(this.sheetInfo.currentPage);
+            var action = undoData.actionList[i];
+            var contactId = action['contact-id'];
+
+            this.contactSheet.deleteContact(contactId);
+            cellWindow.deleteContact(contactId);
         }
 
-        if (lastAction.rowAdded === false)
-            lastRowIdx = cellWindow.getRowIndexByContactId(lastContactId);
+        if (page != sheetInfo.currentPage)
+        {
+            this.contactSheet.setPage(page);
+        }
 
-        cellWindow.setCurrentCell(lastAction.col, lastRowIdx);
+        rowIdx = rowIdx - (page -1) * sheetInfo.rowsPerPage;
+        cellWindow.setCurrentCell(0, rowIdx);
     }
 
-    this.undoPasteRowAction = function (action)
+    this.undoDeleteRowAction = function (undoData)
+    {
+        var lastAction = undoData.actionList[0];
+        var lastRowIdx = lastAction['contact-idx'];
+
+        if (undoData.page != this.sheetInfo.currentPage)
+            this.contactSheet.setPage(undoData['page']);
+
+        for (var i = undoData.actionList.length-1; i >= 0; i--)
+        {
+            var action = undoData.actionList[i];
+            var contactIdx = action['contact-idx'];
+            var contact = action['contact'];
+
+            this.contactSheet.addContact(contactIdx, contact);
+            this.sheetInfo.cellWindow.addContact(contactIdx, contact);
+        }
+
+        this.sheetInfo.cellWindow.hideCellMarker();
+        if (this.sheetInfo.cellWindow.tableCell[0].rows.length > this.sheetInfo.rowsPerPage + 1)
+        {
+            var cnt = this.sheetInfo.cellWindow.tableCell[0].rows.length - this.sheetInfo.rowsPerPage - 1;
+            for (var i = 0; i < cnt; i++)
+            {
+                var idx = this.sheetInfo.cellWindow.tableCell[0].rows.length - 2;
+                this.sheetInfo.cellWindow.deleteRow(idx);
+            }
+        }
+        this.sheetInfo.cellWindow.showCellMarker();
+    }
+
+    this.redoWriteAction = function (undoData)
+    {
+        var cellWindow = this.sheetInfo.cellWindow;
+        var lastAction = undoData.actionList[undoData.actionList.length - 1];
+
+        for (var i = 0; i < undoData.actionList.length; i++)
+        {
+            var action = undoData.actionList[i];
+            var contactId = action.contactId;
+
+            if (action.rowAdded === true)
+            {
+                var contact = new Contact(contactId, true);
+                contact.setValue(action.key, action.newCellData.value);
+
+                this.contactSheet.addContact(action.contactIdx, contact);
+                cellWindow.addContact(action.contactIdx, contact);
+            }
+            else
+            {
+                var contact = this.contactSheet.getContactById(contactId);
+                contact.setValue(action.key, action.newCellData.value);
+                cellWindow.redrawContact(contactId, contact);
+            }
+        }
+
+        cellWindow.setCurrentCellByContactId(lastAction.contactId, lastAction.col);
+    }
+
+    this.redoPasteRowAction = function (undoData)
     {
 
     }
 
-    this.undoDeleteRowAction = function (action)
-    {
-
-    }
-
-    this.redoWriteAction = function (action)
-    {
-
-    }
-
-    this.redoPasteRowAction = function (action)
-    {
-
-    }
-
-    this.redoDeleteRowAction = function (action)
+    this.redoDeleteRowAction = function (undoData)
     {
 
     }

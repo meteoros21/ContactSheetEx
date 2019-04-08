@@ -3,6 +3,7 @@ function CellWindow(contactSheet)
     this.contactSheet = contactSheet;
     this.sheetInfo = contactSheet.sheetInfo;
     this.undoManager = this.sheetInfo.undoManager;
+    this.currentCell = this.sheetInfo.currentCell;
 
     this.container = null;
     this.currentCellMarker = null;
@@ -129,7 +130,7 @@ function CellWindow(contactSheet)
             .css('display', 'block');
     }
 
-    this.setColumnWidth = function(col, width)
+    this.setColumnWidth = function(col, width, finished)
     {
         for (var i = 0; i < this.tableCell[0].rows.length; i++)
         {
@@ -138,12 +139,28 @@ function CellWindow(contactSheet)
             cell.css('min-width', width + 'px');
             cell.css('max-width', width + 'px');
         }
+
+        if (finished)
+        {
+            if (this.dummyTableCell == null)
+                return;
+
+            for (i = 0; i < this.dummyTableCell[0].rows.length; i++)
+            {
+                var cell = $(this.dummyTableCell[0].rows[i].cells[col]);
+                cell.css('width', width + 'px');
+                cell.css('min-width', width + 'px');
+                cell.css('max-width', width + 'px');
+            }
+        }
     }
 
-    this.redrawContact = function (contactId)
+    this.redrawContact = function (contactId, contact)
     {
         var tr = this.tableCell.find('tr[contact-id=' + contactId + ']');
-        var contact = this.contactSheet.getContactById(contactId);
+
+        if (typeof contact == 'undefined')
+            contact = this.contactSheet.getContactById(contactId);
 
         if (tr.length === 0 || contact == null)
             return;
@@ -352,6 +369,97 @@ function CellWindow(contactSheet)
         })
     }
 
+    this.updateSelectedRows = function ()
+    {
+        var sheetInfo = this.sheetInfo;
+        var table = this.tableCell;
+
+        var selectedRows = sheetInfo.normalizeSelectedRow();
+
+        table.find('.selected-cell-lefttop').removeClass('selected-cell-lefttop');
+        table.find('.selected-cell-righttop').removeClass('selected-cell-righttop');
+        table.find('.selected-cell-leftbottom').removeClass('selected-cell-leftbottom');
+        table.find('.selected-cell-rightbottom').removeClass('selected-cell-rightbottom');
+        table.find('.selected-cell-left').removeClass('selected-cell-left');
+        table.find('.selected-cell-top').removeClass('selected-cell-top');
+        table.find('.selected-cell-right').removeClass('selected-cell-right');
+        table.find('.selected-cell-bottom').removeClass('selected-cell-bottom');
+        table.find('.selected-cell').removeClass('selected-cell');
+
+        var colCnt = sheetInfo.getColumnCount();
+
+        for (var i = 0; i < selectedRows.length; i++)
+        {
+            var top = false;
+            var bottom = false;
+
+            var prevRow = (i == 0) ? -1 : selectedRows[i-1];
+            var crntRow = selectedRows[i];
+            var nextRow = (i == colCnt-1) ? -1 : selectedRows[i+1];
+
+            if (prevRow < 0 || prevRow+1 != crntRow)
+                top = true;
+
+            if (nextRow < 0 || nextRow-1 != crntRow)
+                bottom = true;
+
+
+            for (var j = 0; j < colCnt; j++)
+            {
+                var td = $(table[0].rows[crntRow].cells[j]);
+                td.addClass('selected-cell');
+
+                if (top)
+                    td.addClass('selected-cell-top');
+                if (bottom)
+                    td.addClass('selected-cell-bottom');
+
+                if (j === 0)
+                    td.addClass('selected-cell-left');
+                else if (j === colCnt-1)
+                    td.addClass('selected-cell-right');
+            }
+        }
+    }
+
+    this.selectRow = function(row)
+    {
+        var sheetInfo = this.sheetInfo;
+        var table = this.tableCell;
+
+        if (sheetInfo.selectedRows == null)
+            sheetInfo.selectedRows = new Array();
+
+        for (var i = 0; i < sheetInfo.selectedRows.length; i++)
+        {
+            if (sheetInfo.selectedRows[i] === row)
+                return;
+        }
+        sheetInfo.selectedRows.push(row);
+        sheetInfo.selectedRows.sort();
+
+        for (i = 0; i < sheetInfo.getColumnCount(); i++)
+        {
+            var td = $(table[0].rows[row].cells[i]);
+
+            if (i === 0)
+            {
+                td.addClass('selected-cell-lefttop');
+                td.addClass('selected-cell-leftbottom');
+            }
+            else if (i === sheetInfo.getColumnCount()-1)
+            {
+                td.addClass('selected-cell-righttop');
+                td.addClass('selected-cell-rightbottom');
+            }
+
+            td.addClass('selected-cell');
+            td.addClass('selected-cell-top');
+            td.addClass('selected-cell-bottom');
+            sheetInfo.selectedRow = row;
+        }
+    }
+
     this.selectCells = function(col, row, isNewSelection)
     {
         var table = this.tableCell;
@@ -542,7 +650,7 @@ function CellWindow(contactSheet)
         cell.addClass('editing-now').removeClass('current-cell');
         this.currentCellMarker.css('display', 'none');
 
-        this.prevCellData = this.contactSheet.getCellData(col, row);
+        this.prevCellData = this.getCellData(col, row);
         //this.prevCellHeight = cell[0].offsetHeight;
 
 
@@ -689,7 +797,7 @@ function CellWindow(contactSheet)
         {
             var undoData = new UndoData('write');
             undoData.addWriteAction(col, contactId, oldCellData, newCellData);
-            this.undoManager.addUndoAction(undoData);
+            this.undoManager.addUndoData(undoData);
         }
 
         this.setCurrentCell(col, row);
@@ -771,6 +879,35 @@ function CellWindow(contactSheet)
         {
             var dy = bottom - scrollTop - container.innerHeight() + 20;
             container.scrollTop(scrollTop + dy);
+        }
+    }
+
+    // this.setColumnWidth = function (col, width)
+    // {
+    //     if (this.dummyTableCell == null)
+    //         return;
+    //
+    //     for (var i = 0; i < this.dummyTableCell[0].rows.length; i++)
+    //         $(this.dummyTableCell[0].rows[i].cells[col]).css('width', width);
+    // }
+
+    this.setCurrentCellByContactId = function (contactId, col)
+    {
+        var idx = this.contactSheet.getContactIdx(contactId);
+
+        if (idx >= 0)
+        {
+            var page = Math.ceil((idx + 1) / this.sheetInfo.rowsPerPage);
+            var row = idx - (page - 1) * this.sheetInfo.rowsPerPage;
+
+            if (page !== this.sheetInfo.currentPage)
+                this.contactSheet.setPage(page);
+
+            this.setCurrentCell(col, row);
+        }
+        else
+        {
+            this.setCurrentCell(col, this.tableCell[0].rows.length-1);
         }
     }
 
@@ -860,6 +997,35 @@ function CellWindow(contactSheet)
         }
     }
 
+    this.addContact = function(contactIdx, contact)
+    {
+        var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
+        var row = contactIdx - offset;
+
+        var tr = $('<tr contact-id="' + contact.fields['id'] + '"></tr>');
+        for (var i = 0; i < this.sheetInfo.columnList.length; i++) {
+            var columnInfo = this.sheetInfo.columnList[i];
+
+            var key = columnInfo.key;
+            var width = columnInfo.width;
+            var td = $('<td class="unselectable" style="width:' + width + '; min-width:' + width + '; max-width:' + width + '">' + contact.getLabel(key) + '</td>');
+
+            if (contact.isFieldModified(key))
+                td.addClass('modified');
+
+            if (key === 'postal-address' || key === 'note')
+                td.addClass('multiline-text');
+            else
+                td.addClass('singleline-text');
+            tr.append(td);
+        }
+
+        this.tableCell.find('tr:nth-child(' + row + ')').after(tr);
+        this.sheetInfo.rowIndexWindow.insertRow(row, 1);
+
+        this.recalcRowHeight(row);
+    }
+
     this.deleteContact = function(contactId)
     {
         var tr = this.tableCell.find('tr[contact-id=' + contactId + ']');
@@ -867,5 +1033,354 @@ function CellWindow(contactSheet)
 
         tr.remove();
         this.sheetInfo.rowIndexWindow.deleteRow(row);
+    }
+
+    this.deleteSelectedCellText = function()
+    {
+        var undoData = new UndoData('write');
+        var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
+
+        // 선택된 영역이 없는 경우
+        if (this.sheetInfo.selectedCells == null || this.sheetInfo.selectedCells.length === 0)
+        {
+            var col = this.currentCell.col;
+            var row = this.currentCell.row;
+            var key = this.sheetInfo.getColumnKey(col);
+            var contact = this.getContactByRow(row);
+
+            if (contact != null)
+            {
+                var oldCellData = new CellData(key, contact.getLabel(key), contact.getValue(key));
+                var newCellData = new CellData(key, '', '');
+
+                contact.setValue(key, '');
+                this.redrawCell(col, row, contact);
+
+                undoData.addWriteAction(col, contact.fields['id'], oldCellData, newCellData, false, row+offset);
+                this.undoManager.addUndoData(undoData);
+            }
+        }
+        else
+        {
+            for (var k = 0; k < this.sheetInfo.selectedCells.length; k++)
+            {
+                var selection = this.sheetInfo.selectedCells[k];
+
+                for (var j = selection.row1; j <= selection.row2; j++)
+                {
+                    var contact = this.getContactByRow(j);
+
+                    if (contact != null)
+                    {
+                        var contactId = contact.fields['id'];
+
+                        for (var i = selection.col1; i <=  selection.col2; i++)
+                        {
+                            var key = this.sheetInfo.getColumnKey(i);
+
+                            var oldCellData = new CellData(key, contact.getLabel(key), contact.getValue(key));
+                            var newCellData = new CellData(key, '', '');
+
+                            contact.setValue(key, '');
+                            this.redrawCell(i, j, contact);
+
+                            undoData.addWriteAction(i, contactId, oldCellData, newCellData, false, j+offset);
+                        }
+                    }
+                }
+            }
+
+            if (undoData.actionList.length > 0)
+                this.undoManager.addUndoData(undoData);
+        }
+    }
+
+    this.deleteSelectedRow = function ()
+    {
+        if (this.sheetInfo.selectedRows == null || this.sheetInfo.selectedRows.length == 0)
+            return;
+
+        var undoData = new UndoData('deleteRow', this.sheetInfo.currentPage);
+        var offsetRowIdx = (this.sheetInfo.currentPage-1) * this.sheetInfo.rowsPerPage;
+
+        var selectedRows = this.sheetInfo.normalizeSelectedRow();
+        for (var i = selectedRows.length-1; i >= 0; i--)
+        {
+            var row = selectedRows[i];
+            var contactId = $(this.tableCell[0].rows[row]).attr('contact-id');
+            var contact = this.sheetInfo.getContactById(contactId);
+
+            this.contactSheet.deleteContact(contactId);
+            this.deleteContact(contactId);
+
+            var undoAction = {
+                'contact-idx': offsetRowIdx + row,
+                'contact-id': contactId,
+                'contact': contact
+            }
+            undoData.actionList.push(undoAction);
+        }
+
+        this.undoManager.addUndoData(undoData);
+
+        var crntRow = this.sheetInfo.currentCell.row;
+        this.hideCellMarker();
+
+        // 필요한 만큼 Row 를 추가한다.
+        if (this.tableCell[0].rows.length - 1 < this.sheetInfo.contactList.length)
+        {
+            var rowIdx = this.tableCell[0].rows.length - 1 + offsetRowIdx;
+            var cnt = this.sheetInfo.contactList.length - this.tableCell[0].rows.length + 1;
+
+            for (var i = rowIdx; i < rowIdx + cnt; i++)
+            {
+                var contact = this.sheetInfo.contactList[i];
+                this.addContact(i, contact);
+            }
+        }
+
+        if (crntRow > this.tableCell[0].rows.length-1)
+            crntRow = this.tableCell[0].rows.length-1;
+
+        this.setCurrentCell(this.sheetInfo.currentCell.col, crntRow);
+    }
+
+    this.clearSelection = function()
+    {
+
+    }
+
+    this.getContactByRow = function(row)
+    {
+        var contactId = this.getContactIdByRowIndex(row);
+        return this.contactSheet.getContactById(contactId);
+    }
+
+
+    this.getCellData = function (col, row)
+    {
+        var key = this.sheetInfo.getColumnKey(col);
+        var contact = this.getContactByRow(row);
+
+        var cellData = new CellData(key);
+
+        if (contact == null)
+        {
+            cellData.label = '';
+            cellData.value = key == 'groups' ? null : '';
+        }
+        else
+        {
+            cellData.label = contact.getLabel(key);
+            cellData.value = contact.getValue(key);
+        }
+
+        return cellData;
+    }
+
+    this.getCellText = function (col, row)
+    {
+        var key = this.sheetInfo.getColumnKey(col);
+        var contact = this.getContactByRow(row);
+
+        return contact.getLabel(key);
+    }
+
+    this.getCurrentCellText = function ()
+    {
+        return this.getCellText(this.sheetInfo.currentCell.col, this.sheetInfo.currentCell.row);
+    }
+
+    this.getClipboardData = function ()
+    {
+        var sheetInfo = this.sheetInfo;
+        var clipboardData = new Object();
+
+        if (sheetInfo.selectedRows != null && sheetInfo.selectedRows.length > 0)
+        {
+            var selectedRows = sheetInfo.normalizeSelectedRow();
+
+            clipboardData.dataType = 'rows';
+            clipboardData.rows = new Array();
+
+            for (var i = 0; i < selectedRows.length; i++)
+            {
+                var row = selectedRows[i];
+                var contact = this.getContactByRow(row);
+                var contactId = contact.fields['id'];
+                clipboardData.rows.push(contactId);
+            }
+
+            return JSON.stringify(clipboardData);
+        }
+        else
+        {
+            clipboardData.dataType = 'cells';
+            clipboardData.col = 1000000;
+            clipboardData.row = 1000000;
+
+            var cellDataList = new Array();
+
+            if (sheetInfo.selectedCells != null)
+            {
+                for (var k = 0; k < sheetInfo.selectedCells.length; k++)
+                {
+                    var selection = sheetInfo.selectedCells[k];
+                    for (var j = selection.row1; j <= selection.row2; j++)
+                    {
+                        if (j < clipboardData.row)
+                            clipboardData.row = j;
+
+                        for (var i = selection.col1; i <= selection.col2; i++)
+                        {
+                            if (i < clipboardData.col)
+                                clipboardData.col = i;
+
+                            var cellData = this.getCellData(i, j);
+                            cellData.col = i;
+                            cellData.row = j;
+
+                            cellDataList.push(cellData);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                clipboardData.col = sheetInfo.currentCell.col;
+                clipboardData.row = sheetInfo.currentCell.row;
+
+                var cellData = this.getCellData(sheetInfo.currentCell.col, sheetInfo.currentCell.row);
+                cellData.col = sheetInfo.currentCell.col;
+                cellData.row = sheetInfo.currentCell.row;
+                cellDataList.push(cellData);
+            }
+
+            clipboardData.cellDataList = cellDataList;
+
+            return JSON.stringify(clipboardData);
+        }
+    }
+
+    this.pasteClipboardData = function (jsonString)
+    {
+        var sheetInfo = this.sheetInfo;
+        var clipboardData = JSON.parse(jsonString);
+
+        if (clipboardData.dataType === 'rows')
+        {
+            this.unselectRows();
+
+            var offsetRow = (sheetInfo.currentPage - 1) * sheetInfo.rowsPerPage;
+            var undoData = new UndoData('pasteRow');
+            var rows = clipboardData.rows;
+            for (var j = 0; j < rows.length; j++)
+            {
+                var orgContactId = rows[j];
+                var orgContact = this.contactSheet.getContactById(orgContactId);
+                var fields = orgContact.getFields(sheetInfo.columnInfo);
+
+                var contactId = this.contactSheet.getNextContactId();
+                var contact = new Contact(contactId);
+                contact.isNew = true;
+                contact.setFields(fields);
+                contact.fields['id'] = contactId;
+
+                var rowIdx = this.tableCell[0].rows.length - 1;
+                this.contactSheet.addContact(rowIdx + offsetRow, contact);
+                this.addContact(rowIdx, contact);
+
+                var undoAction = new Object();
+                undoAction['contact-id'] = contactId; // 저장하면 contactId가 달라지므로, 저장 시에는 UndoData를 리셋해야한다.
+                undoAction['row-idx'] = rowIdx + offsetRow;
+                undoAction['page'] = sheetInfo.currentPage;
+                undoAction['fields'] = contact.getFields(sheetInfo.columnList);
+                undoAction['sort-info'] = sheetInfo.sortInfo;
+
+                undoData.addAction(undoAction);
+            }
+
+            var rowIdx = this.tableCell[0].rows.length - 2;
+            this.setCurrentCell(0, rowIdx);
+
+            this.undoManager.addUndoData(undoData);
+        }
+        else
+        {
+            var offsetRow = (sheetInfo.currentPage - 1) * sheetInfo.rowsPerPage;
+            var offsetX = sheetInfo.currentCell.col - clipboardData.col;
+            var offsetY = sheetInfo.currentCell.row - clipboardData.row;
+
+            var undoData = new UndoData('write');
+
+            for (var i = 0; i < clipboardData.cellDataList.length; i++)
+            {
+                var data = clipboardData.cellDataList[i];
+                var newCellData = new CellData();
+                newCellData.setCellData(data);
+
+                var col = newCellData.col + offsetX;
+                var row = newCellData.row + offsetY;
+
+                var rowAdded = false;
+                var key = sheetInfo.getColumnKey(col);
+
+                var orgCellData = new CellData(key);
+                var contactId = null;
+
+                // Is there need to add new row and contact object
+                if (this.tableCell[0].rows.length-1 <= row)
+                {
+                    // create new contact object with new temporary id
+                    contactId = this.contactSheet.getNextContactId();
+                    var contact = new Contact(contactId, true);
+                    contact.setValue(key, newCellData.value);
+
+                    orgCellData.label = '';
+                    orgCellData.value = (key === 'groups') ? null : '';
+
+                    this.contactSheet.addContact(row + offsetRow, contact);
+                    this.addContact(row + offsetRow, contact);
+
+                    rowAdded = true;
+                }
+                else
+                {
+                    var contact = this.getContactByRow(row);
+                    contactId = contact.fields['id'];
+                    orgCellData.label = contact.getLabel(key);
+                    orgCellData.value = contact.getValue(key);
+
+                    if ((key == 'groups' && newCellData.key == 'groups') || key != 'groups')
+                    {
+                        contact.setValue(key, newCellData.value);
+                        this.redrawContact(contactId, contact);
+                    }
+                }
+
+                // Undo action
+                undoData.addWriteAction(col, contactId, orgCellData, newCellData, rowAdded, row + offsetRow);
+            }
+
+            // var rowCnt = 0;
+            // var lastContactId = '';
+            // for (var i = 0; i < undoData.actionList.length; i++)
+            // {
+            //     if (undoData.actionList[i].contactId != lastContactId)
+            //     {
+            //         rowCnt++;
+            //         lastContactId = undoData.actionList[i].contactId;
+            //     }
+            // }
+
+            // if (rowCnt > 1)
+            // {
+            //     undoData.sortKey = sheetInfo.sortInfo['key'];
+            //     undoData.sortType = sheetInfo.sortInfo['type'];
+            // }
+
+            // Undo action을 등록한다.
+            this.undoManager.addUndoData(undoData);
+        }
     }
 }

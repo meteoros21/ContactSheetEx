@@ -19,6 +19,8 @@ function RowIndexWindow(contactSheet)
 
         this.container.append(this.tableRow);
         parent.append(this.container);
+
+        this.addMouseEventHandler();
     }
 
     this.createDummyTable = function ()
@@ -64,7 +66,12 @@ function RowIndexWindow(contactSheet)
             count = 1;
 
         for (var i = 0; i < count; i++)
-            this.tableRow.find('tr:' + idx).before('<tr><td></td></tr>');
+            this.tableRow.find('tr:nth-child(' + idx + ')').after('<tr><td class="modified"></td></tr>');
+
+        for (var i = idx; i < this.tableRow[0].rows.length; i++)
+        {
+            this.tableRow[0].rows[i].cells[0].innerText = (i+1);
+        }
     }
 
     this.addRow = function (count)
@@ -77,5 +84,60 @@ function RowIndexWindow(contactSheet)
 
         for (var i = 0; i < count; i++)
             this.tableRow.find('tr:last').after('<tr><td>' + (++val) + '</td></tr>');
+    }
+
+    this.deleteRow = function(idx)
+    {
+        this.tableRow.find('tr:nth-child(' + (idx+1) + ')').remove();
+        for (var i = idx; i < this.tableRow[0].rows.length; i++)
+        {
+            this.tableRow[0].rows[i].cells[0].innerText = (i+1);
+        }
+    }
+
+    this.addMouseEventHandler = function ()
+    {
+        var contactSheet = this.contactSheet;
+        var sheetInfo = this.sheetInfo;
+
+        this.tableRow.on('mousedown', function (event)
+        {
+            var td = $(event.target).closest('td');
+            var row = td.parent().index();
+
+            if (event.which != 1)
+                return;
+
+            event.preventDefault();
+
+            if (event.metaKey)
+            {
+                sheetInfo.toggleSelectedRow(row);
+                sheetInfo.lastSelectedRow = row;
+
+                sheetInfo.cellWindow.setCurrentCell(0, row);
+                sheetInfo.cellWindow.updateSelectedRows();
+            }
+            else if (event.shiftKey)
+            {
+                if (row > sheetInfo.lastSelectedRow)
+                    sheetInfo.selectRow({s:sheetInfo.lastSelectedRow, e:row}, false);
+                else
+                    sheetInfo.selectRow({s:row, e:sheetInfo.lastSelectedRow}, false);
+
+                sheetInfo.cellWindow.updateSelectedRows();
+            }
+            else
+            {
+                var row = td.parent().index();
+
+                sheetInfo.selectedRows = [];
+                sheetInfo.selectedRows.push({s:row, e:row});
+                sheetInfo.cellWindow.updateSelectedRows();
+
+                sheetInfo.lastSelectedRow = row;
+                sheetInfo.cellWindow.setCurrentCell(0, row);
+            }
+        });
     }
 }

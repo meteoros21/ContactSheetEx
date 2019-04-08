@@ -1,13 +1,18 @@
-function Contact(contactId)
+function Contact(contactId, isNew)
 {
-    this.fields = new Object();
+    this.fields = {};
     this.modified = false;
-    this.isNew = false;
+    this.isNew = (typeof isNew == 'undefined') ? false : isNew;
 
     if (typeof contactId != 'undefined')
     {
         this.fields['id'] = contactId;
         this.modified = true;
+    }
+
+    this.setData = function (cellData)
+    {
+        this.setValue(cellData.key, cellData.value);
     }
 
     this.setValue = function(key, value)

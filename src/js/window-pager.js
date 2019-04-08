@@ -11,7 +11,7 @@ function PagerWindow(contactSheet)
         this.container = $('<div class="pagination"></div>');
         parent.append(this.container);
 
-        this.update();
+        this.redraw(1);
 
         // var page  = this.sheetInfo.currentPage == 0 ? 1 : this.sheetInfo.currentPage;
         // var page10 = Math.ceil(page / 10);
@@ -43,12 +43,12 @@ function PagerWindow(contactSheet)
         // parent.append($(html));
     }
 
-    this.update = function ()
+    this.redraw = function (page)
     {
-        var page  = this.sheetInfo.currentPage == 0 ? 1 : this.sheetInfo.currentPage;
+        //var page  = this.sheetInfo.currentPage == 0 ? 1 : this.sheetInfo.currentPage;
         var page10 = Math.ceil(page / 10);
         var pageCnt = this.sheetInfo.getPageCount();
-        var pageCnt10 = Math.ceil(pageCnt / 10);
+        //var pageCnt10 = Math.ceil(pageCnt / 10);
         var startPage = 1 + (page10-1) * 10;
         var endPage = (startPage + 9 > pageCnt) ? pageCnt : startPage + 9;
 

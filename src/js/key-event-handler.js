@@ -396,14 +396,14 @@ function keyDownHandlerForSheet(event)
 
         if (sheetInfo.selectedRows != null && sheetInfo.selectedRows.length > 0)
         {
-            showWaitScreen().then(function() {
-                sheetInfo.myPlugin.deleteSelectedRow();
-                hideWaitScreen();
-            });
-            //sheetInfo.myPlugin.deleteSelectedRow();
+            // showWaitScreen().then(function() {
+            //     mySheet.deleteSelectedRow();
+            //     hideWaitScreen();
+            // });
+            cellWindow.deleteSelectedRow();
         }
         else
-            sheetInfo.myPlugin.deleteSelectedCellText();
+            cellWindow.deleteSelectedCellText();
     }
     else if (event.keyCode == 90) // 'z'
     {

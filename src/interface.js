@@ -571,119 +571,6 @@ function main()
 
 	});
 
-	// Copy명령을 처리하기 위한 핸들러
-	$(document).bind('copy', function(e) {
-		
-		var tagName = event.target.tagName;
-		var editing = $(event.target).attr('editing');
-
-		if ((tagName == 'INPUT' || tagName == 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
-			return;
-
-		if ($(event.target).attr('editing') != 'true')
-		{
-			var selectedRows = mySheet.getSelectedRows();
-
-			if (selectedRows != null && selectedRows.length > 0)
-			{
-				var text = mySheet.getCurrentCellText();
-				e.originalEvent.clipboardData.setData('text', text);
-				var jsonString = mySheet.getClipboardData();
-				e.originalEvent.clipboardData.setData('text/json', jsonString);
-
-				e.preventDefault();
-
-				mySheet.clipboardData = new Object();
-				mySheet.clipboardData.text = text;
-				mySheet.clipboardData.jsonString = jsonString;
-			}
-			else
-			{
-				var text = mySheet.getCurrentCellText();
-				e.originalEvent.clipboardData.setData('text', text);
-				var jsonString = mySheet.getClipboardData();
-				e.originalEvent.clipboardData.setData('text/json', jsonString);
-
-				e.preventDefault();
-
-				mySheet.clipboardData = new Object();
-				mySheet.clipboardData.text = text;
-				mySheet.clipboardData.jsonString = jsonString;
-			}
-		}
-	});
-
-	// Paste명령을 처리하기 위한 핸들러
-	$(document).bind('paste', function(e) {
-		
-		var tagName = event.target.tagName;
-		var editing = $(event.target).attr('editing');
-
-		if ((tagName == 'INPUT' || tagName == 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
-			return;
-
-		if ($(event.target).attr('editing') != 'true')
-		{
-			var text = e.originalEvent.clipboardData.getData('text');
-			var jsonString = e.originalEvent.clipboardData.getData('text/json');
-			
-			if (jsonString != null && jsonString != '')
-			{
-				mySheet.pasteClipboardData(jsonString);
-			}
-			else
-			{
-				mySheet.pasteText(text);
-			}
-			
-			e.preventDefault();
-		}
-	});
-
-	// Cut명령을 처리하기 위한 핸들러
-	$(document).bind('cut', function(e) {
-		
-		var tagName = event.target.tagName;
-		var editing = $(event.target).attr('editing');
-
-		if ((tagName == 'INPUT' || tagName == 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
-			return;
-			
-		if ($(event.target).attr('editing') != 'true')
-		{
-			if (mySheet.getSelectionCount() == 0)
-			{
-				var text = mySheet.getCurrentCellText();
-				e.originalEvent.clipboardData.setData('text', text);
-				var jsonString = mySheet.getClipboardData();
-				e.originalEvent.clipboardData.setData('text/json', jsonString);
-
-				e.preventDefault();
-
-				mySheet.clipboardData = new Object();
-				mySheet.clipboardData.text = text;
-				mySheet.clipboardData.jsonString = jsonString;
-
-				mySheet.deleteSelectedCellText();
-			}
-			else
-			{
-				var text = mySheet.getCurrentCellText();
-				e.originalEvent.clipboardData.setData('text', text);
-				var jsonString = mySheet.getClipboardData();
-				e.originalEvent.clipboardData.setData('text/json', jsonString);
-				
-				mySheet.deleteSelectedCellText();
-				mySheet.clearSelection();
-
-				e.preventDefault();
-
-				mySheet.clipboardData = new Object();
-				mySheet.clipboardData.text = text;
-				mySheet.clipboardData.jsonString = jsonString;
-			}
-		}
-	});
 	
 	// 사용자 설정 정보를 읽어들이고, 설정 정보에 의거하여 시트를 작성한다.
 	loadUserOption(function(columnList) {
@@ -718,8 +605,92 @@ function main()
 	});	
 }
 
+function bindClipboardEvent()
+{
+	// Copy 명령을 처리하기 위한 핸들러
+	$(document).bind('copy', function(event) {
+
+		var tagName = event.target.tagName;
+		var editing = $(event.target).attr('editing');
+
+		if ((tagName === 'INPUT' || tagName === 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
+			return;
+
+		if ($(event.target).attr('editing') !== 'true')
+		{
+			var cellWindow = mySheet.sheetInfo.cellWindow;
+			var text = cellWindow.getCurrentCellText();
+			var json = cellWindow.getClipboardData();
+
+			event.originalEvent.clipboardData.setData('text', text);
+			event.originalEvent.clipboardData.setData('text/json', json);
+
+			event.preventDefault();
+
+			mySheet.clipboardData = new Object();
+			mySheet.clipboardData.text = text;
+			mySheet.clipboardData.jsonString = json;
+		}
+	});
+
+	// Paste 명령을 처리하기 위한 핸들러
+	$(document).bind('paste', function(event) {
+
+		var tagName = event.target.tagName;
+		var editing = $(event.target).attr('editing');
+
+		if ((tagName === 'INPUT' || tagName === 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
+			return;
+
+		if ($(event.target).attr('editing') !== 'true')
+		{
+			var cellWindow = mySheet.sheetInfo.cellWindow;
+			var text = event.originalEvent.clipboardData.getData('text');
+			var json = event.originalEvent.clipboardData.getData('text/json');
+
+			if (json != null && json !== '')
+				cellWindow.pasteClipboardData(json);
+			else
+				cellWindow.pasteText(text);
+
+			event.preventDefault();
+		}
+	});
+
+	// Cut 명령을 처리하기 위한 핸들러
+	$(document).bind('cut', function(event) {
+
+		var tagName = event.target.tagName;
+		var editing = $(event.target).attr('editing');
+
+		if ((tagName === 'INPUT' || tagName === 'TEXTAREA') && (typeof editing == 'undefined' || editing == 'true'))
+			return;
+
+		if ($(event.target).attr('editing') !== 'true')
+		{
+			var cellWindow = mySheet.sheetInfo.cellWindow;
+			var text = cellWindow.getCurrentCellText();
+			var json = cellWindow.getClipboardData();
+
+			event.originalEvent.clipboardData.setData('text', text);
+			event.originalEvent.clipboardData.setData('text/json', json);
+
+			event.preventDefault();
+
+			mySheet.clipboardData = new Object();
+			mySheet.clipboardData.text = text;
+			mySheet.clipboardData.jsonString = json;
+
+			cellWindow.deleteSelectedCellText();
+			cellWindow.clearSelection();
+		}
+	});
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 	//main();
 	mySheet = new ContactSheet();
 	mySheet.init($('.table_wrap'));
+
+	bindClipboardEvent();
 });

@@ -5,6 +5,7 @@ function ContactSheet()
         columnList: [],
         allColumnList: [],
         contactList: [],
+        deletedContactList: [],
         contactGroupList: [],
         filteredContactList: [],
 
@@ -36,12 +37,105 @@ function ContactSheet()
         getCurrentColumnKey: function() {
             return this.columnList[this.currentCell.col].key;
         },
+        getColumnIndex: function (key) {
+            for (var i = 0; this.columnList.length; i++)
+            {
+                if (this.columnList[i].key == key)
+                    return i;
+            }
+            return -1;
+        },
         getColumnCount: function () {
             return this.columnList.length;
         },
         getPageCount: function () {
             var pageCount = Math.ceil(this.contactList.length / this.rowsPerPage);
             return (pageCount === 0 ? 1 : pageCount);
+        },
+        selectRow: function(selInfo, addNew)
+        {
+            if (this.selectedRows == null)
+                this.selectedRows = new Array();
+
+            if (addNew)
+            {
+                this.selectedRows.push(selInfo);
+            }
+            else
+            {
+                this.selectedRows.pop();
+                this.selectedRows.push(selInfo);
+            }
+        },
+        toggleSelectedRow: function (row)
+        {
+            if (this.selectedRows == null)
+                this.selectedRows = [];
+
+            var found = false;
+            for (var i = 0; i < this.selectedRows.length; i++)
+            {
+                var selection = this.selectedRows[i];
+
+                if (selection.s === row)
+                {
+                    selection.s++;
+                    found = true;
+                    break;
+                }
+                else if (selection.e === row)
+                {
+                    selection.e--;
+                    found = true;
+                    break;
+                }
+                else if (row > selection.s && row < selection.e)
+                {
+                    var selection2 = {s:row+1, e: selection.e};
+                    this.selectedRows.splice(i+1, 0, selection2);
+
+                    selection.e = row-1;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found === false)
+            {
+                this.selectedRows.push({s:row, e:row});
+                this.selectedRows.sort();
+            }
+        },
+
+        normalizeSelectedRow: function ()
+        {
+            var normalizedSelection = [];
+
+            if (this.selectedRows == null)
+                return normalizedSelection;
+
+            for (var i = 0; i < this.selectedRows.length; i++)
+            {
+                var selection = this.selectedRows[i];
+                for (var row = selection.s; row <= selection.e; row++)
+                {
+                    var found = false;
+                    for (var j = 0; j < normalizedSelection.length; j++)
+                    {
+                        if (normalizedSelection[j] === row)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                        normalizedSelection.push(row);
+                }
+            }
+
+            normalizedSelection.sort(function (a, b) { return parseInt(a)-parseInt(b) });
+            return normalizedSelection;
         }
     }
 
@@ -181,6 +275,27 @@ function ContactSheet()
         this.sheetInfo.columnWindow.addDraggableEvent();
     }
 
+    this.setPage = function(page)
+    {
+        if (this.sheetInfo.currentPage == page || page < 1)
+            return;
+
+        if (Math.ceil((this.sheetInfo.contactList.length + 1) / this.sheetInfo.rowsPerPage) < page)
+            return;
+
+        var sheetInfo = this.sheetInfo;
+
+        showWaitScreen().then(function () {
+
+            sheetInfo.cellWindow.redraw(page);
+            sheetInfo.rowIndexWindow.redraw(page);
+            sheetInfo.cellWindow.setCurrentCell(0, 0);
+            sheetInfo.pagerWindow.redraw(page);
+
+            hideWaitScreen();
+        })
+    }
+
     // 크롬 저장소로부터 저장된 사용자 옵션을 읽는다.
     this.loadUserOption = function(callback)
     {
@@ -221,6 +336,28 @@ function ContactSheet()
         this.sheetInfo.cellWindow.setCurrentCell(0, 0);
     }
 
+    this.sortContactList = function(key1, key2, direction)
+    {
+        var col = this.sheetInfo.getColumnIndex(key1);
+        this.sheetInfo.columnWindow.setSortColumn(col, direction);
+        this.sheetInfo.sortInfo = {
+            type: 'simple',
+            direction: direction,
+            key1: key1,
+            key2: key2
+        };
+
+        var sheetInfo = this.sheetInfo;
+        var curPage = this.sheetInfo.currentPage;
+
+        showWaitScreen().then(function () {
+            sheetInfo.contactIO.sortContactList(sheetInfo.contactList, key1, key2, direction);
+            sheetInfo.cellWindow.redraw(curPage);
+            sheetInfo.cellWindow.setCurrentCell(sheetInfo.currentCell.col, sheetInfo.currentCell.row);
+            hideWaitScreen();
+        });
+    }
+
     this.loadContacts = function ()
     {
         var thisContactSheet = this;
@@ -246,7 +383,9 @@ function ContactSheet()
                     else
                         subkey = 'full-name';
 
+                    mySheet.sheetInfo.columnWindow.setSortColumn(0, 'sortAsc');
                     contactIO.sortContactList(contactList, key, subkey);
+
                     mySheet.setContactGroupList(contactGroupList);
                     mySheet.setContactList(contactList);
 
@@ -267,28 +406,59 @@ function ContactSheet()
         this.sheetInfo.contactList.splice(contactIdx, 0, contact);
     }
 
-    this.getCellData = function(col, row)
+    this.deleteContact = function (contactId, saveContact)
     {
-        var key = this.sheetInfo.getColumnKey(col);
-        var contact = this.getContactByRow(row);
-        var cellData = new CellData(key);
+        if (this.sheetInfo.contactList == null)
+            return;
 
-        if (contact != null)
+        if (typeof saveContact == 'undefined')
+            saveContact = true;
+
+        var sheetInfo = this.sheetInfo;
+        var contact = null;
+
+        for (var i = 0; i < sheetInfo.contactList.length; i++)
         {
-            cellData.label = contact.getLabel(key);
-            cellData.value = contact.getValue(key);
-        }
-        else
-        {
-            cellData.label = '';
-            cellData.value = (key === 'groups') ? null : '';
-            // var dataCell = sheetInfo2.getDataCell(col, row);
-            //
-            // cellData.label = $(dataCell).text().trimRight();
-            // cellData.value = (key == 'groups') ? JSON.parse($(cell).attr('group-data')) : cellData.label;
+            if (sheetInfo.contactList[i].fields['id'] === contactId)
+            {
+                contact = sheetInfo.contactList[i];
+
+                if (saveContact)
+                {
+                    if (sheetInfo.deletedContactList == null)
+                        sheetInfo.deletedContactList = new Array();
+
+                    sheetInfo.deletedContactList.push(contact);
+                }
+
+                sheetInfo.contactList.splice(i, 1);
+
+                break;
+            }
         }
 
-        return cellData;
+        return contact;
+    }
+
+    this.removeDeletedContact = function(contactId)
+    {
+        var sheetInfo = this.sheetInfo;
+        var contact = null;
+
+        if (sheetInfo.deletedContactList != null)
+        {
+            for (var i = 0; i < sheetInfo.deletedContactList.length; i++)
+            {
+                if (sheetInfo.deletedContactList[i].fields['id'] == contactId)
+                {
+                    contact = sheetInfo.deletedContactList[i];
+                    sheetInfo.deletedContactList.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        return contact;
     }
 
     this.getContactById = function(contactId)
@@ -305,10 +475,15 @@ function ContactSheet()
         return null;
     }
 
-    this.getContactByRow = function(row)
+    this.getContactIdx = function (contactId)
     {
-        var contactId = this.sheetInfo.cellWindow.getContactIdByRowIndex(row);
-        return this.getContactById(contactId);
+        for (var i = 0; i < this.sheetInfo.contactList.length; i++)
+        {
+            if (contactId == this.sheetInfo.contactList[i].fields['id'])
+                return i;
+        }
+
+        return -1;
     }
 
     this.getNextContactId = function()
@@ -316,8 +491,8 @@ function ContactSheet()
         return this.lastContactId++;
     }
 
-    this.addUndoAction = function (action)
+    this.getSelectionCount = function()
     {
-
+        return this.sheetInfo.selectedCells == null ? 0 : this.sheetInfo.selectedCells.length;
     }
 }

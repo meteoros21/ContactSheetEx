@@ -1,6 +1,7 @@
 function ColumnWindow(contactSheet)
 {
     this.contactSheet = contactSheet;
+    this.sheetInfo = contactSheet.sheetInfo;
     this.container = null;
     this.tableCol = null;
 
@@ -55,13 +56,10 @@ function ColumnWindow(contactSheet)
             tr.append(td);
         }
 
-        //var div = this.drawColumnResizeHandles(this.tableCol);
-
-        //this.container.append(div);
         this.container.append(this.tableCol);
         parent.append(this.container);
 
-        //this.container.insertBefore(this.tableCol, div);
+        this.addClickEvent();
     }
 
     this.createColumnResizeHandles = function()
@@ -96,10 +94,37 @@ function ColumnWindow(contactSheet)
         return divContainer;
     }
 
+    this.setSortColumn = function (col, className)
+    {
+        $(this.tableCol).find('.sortAsc').removeClass('sortAsc');
+        $(this.tableCol).find('.sortDsc').removeClass('sortDsc');
+        $(this.tableCol[0].rows[0].cells[col]).addClass(className);
+    }
+
     this.setCurrentCol = function(col)
     {
         this.tableCol.find('.current-col').removeClass('current-col');
         $(this.tableCol[0].rows[0].cells[col]).addClass('current-col');
+    }
+
+    this.addClickEvent = function ()
+    {
+        var contactSheet = this.contactSheet;
+        var sheetInfo = this.sheetInfo;
+
+        this.tableCol.off('click');
+
+        this.tableCol.on('click', function (e)
+        {
+            var td = $(e.target).closest('td');
+            var col = td.index();
+            var direction = td.hasClass('sortAsc') ? 'sortDsc' : 'sortAsc';
+
+            var key1 = sheetInfo.getColumnKey(col);
+            var key2 = (key1 == 'family-name') ? 'given-name' : 'family-name';
+
+            contactSheet.sortContactList(key1, key2, direction);
+        });
     }
 
     this.addDraggableEvent = function ()
@@ -141,7 +166,7 @@ function ColumnWindow(contactSheet)
                 var div = $(cell).children().first();
                 div.css('width', width + 'px');
 
-                sheetInfo.cellWindow.setColumnWidth(resizeHandleIdx, width);
+                sheetInfo.cellWindow.setColumnWidth(resizeHandleIdx, width, false);
             },
             stop: function(event, ui) {
 
@@ -161,6 +186,7 @@ function ColumnWindow(contactSheet)
                 sheetInfo.columnList[resizeHandleIdx].width = width;
 
                 var key = sheetInfo.getColumnKey(resizeHandleIdx);
+                sheetInfo.cellWindow.setColumnWidth(resizeHandleIdx, parseInt(width, 10), true);
 
                 for (var j = 0; j < sheetInfo.allColumnList.length; j++)
                 {

@@ -1252,20 +1252,26 @@ function ContactIO()
     }
 
     // 주소록 목록을 정렬한다.
-    this.sortContactList = function(contactList, key1, key2)
+    this.sortContactList = function(contactList, key1, key2, direction)
     {
+        if (typeof direction == 'undefined')
+            direction = 'sortAsc';
+
+        var factor = (direction === 'sortAsc') ? 1 : -1;
+
         contactList.sort(function(a, b) {
+
             var fn1 = a.fields[key1] == null ? '' : a.fields[key1];
             var fn2 = b.fields[key1] == null ? '' : b.fields[key1];
             
-            var cmp = fn1.localeCompare(fn2);
-            
+            var cmp = fn1.localeCompare(fn2) * factor;
+
             if (cmp == 0)
             {
                 var gn1 = a.fields[key2] == null ? '' : a.fields[key2];
                 var gn2 = b.fields[key2] == null ? '' : b.fields[key2];
-                
-                return gn1.localeCompare(gn2);
+
+                return gn1.localeCompare(gn2) * factor;
             }
             else
             {

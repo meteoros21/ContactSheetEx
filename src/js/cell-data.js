@@ -101,21 +101,26 @@ function CellData(key, label, value)
     }
 }
 
-function UndoData(type)
+function UndoData(type, page)
 {
     this.type = (typeof type == 'undefined') ? 'write' : type;
     this.sortKey = null;
     this.sortType = null;
     this.actionList = new Array();
+    this.page = (typeof page == 'undefined') ? 0 : page;
 
     this.addAction = function(action)
     {
+        if (typeof action.col != 'undefined')
+            action.key = mySheet.sheetInfo.getColumnKey(action.col);
+
         this.actionList.push(action);
     }
 
     this.addWriteAction = function(col, contactId, oldCellData, newCellData, rowAdded, contactIdx)
     {
         var action = new Object();
+        action.key = mySheet.sheetInfo.getColumnKey(col);
         action.col = col;
         action.contactIdx = contactIdx;
         action.contactId = contactId;
