@@ -913,7 +913,7 @@ function CellWindow(contactSheet)
 
     this.setCurrentCell = function(col, row)
     {
-        var cellMarker = this.currentCellMarker;
+        //var cellMarker = this.currentCellMarker;
         var tableCell = this.tableCell;
 
         if (typeof findDialog != 'undefined')
@@ -940,20 +940,11 @@ function CellWindow(contactSheet)
 
         // 셀 선택 상자를 그린다.
         this.showCellMarker();
-        // var offsetLeft = newCell[0].offsetLeft;
-        // var offsetTop = newCell[0].offsetTop;
-        // var offsetWidth = newCell[0].offsetWidth;
-        // var offsetHeight = newCell[0].offsetHeight;
-        // cellMarker.css('left', offsetLeft + 'px');
-        // cellMarker.css('top', offsetTop + 'px');
-        // cellMarker.css('width', offsetWidth + 'px');
-        // cellMarker.css('height', offsetHeight + 'px');
-        // cellMarker.css('display', 'block');
 
         this.checkScroll(col, row);
 
         var key = this.sheetInfo.getColumnKey(col);
-        if (key == 'postal-address' || key == 'note')
+        if (key === 'postal-address' || key === 'note')
             $('#cell-ta')[0].focus();
         else
             $('#cell-input')[0].focus();
@@ -997,10 +988,16 @@ function CellWindow(contactSheet)
         }
     }
 
-    this.addContact = function(contactIdx, contact)
+    this.deleteRow = function (row)
     {
-        var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
-        var row = contactIdx - offset;
+        $(this.tableCell[0].rows[row]).remove();
+        this.sheetInfo.rowIndexWindow.deleteRow(row);
+    }
+
+    this.addContact = function(row, contact)
+    {
+        //var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
+        //var row = contactIdx - offset;
 
         var tr = $('<tr contact-id="' + contact.fields['id'] + '"></tr>');
         for (var i = 0; i < this.sheetInfo.columnList.length; i++) {
@@ -1127,15 +1124,17 @@ function CellWindow(contactSheet)
         this.hideCellMarker();
 
         // 필요한 만큼 Row 를 추가한다.
-        if (this.tableCell[0].rows.length - 1 < this.sheetInfo.contactList.length)
-        {
-            var rowIdx = this.tableCell[0].rows.length - 1 + offsetRowIdx;
-            var cnt = this.sheetInfo.contactList.length - this.tableCell[0].rows.length + 1;
+        var test = this.sheetInfo.rowsPerPage - this.tableCell[0].rows.length + 1;
 
-            for (var i = rowIdx; i < rowIdx + cnt; i++)
+        if (test > 0)
+        {
+            var rowIdx = this.tableCell[0].rows.length - 1;
+            var contactIdx = rowIdx + offsetRowIdx;
+
+            for (var i = 0; i < test; i++)
             {
-                var contact = this.sheetInfo.contactList[i];
-                this.addContact(i, contact);
+                if (i+contactIdx < this.sheetInfo.contactList.length)
+                    this.addContact(i+rowIdx, this.sheetInfo.contactList[i+contactIdx]);
             }
         }
 
@@ -1272,7 +1271,7 @@ function CellWindow(contactSheet)
             this.unselectRows();
 
             var offsetRow = (sheetInfo.currentPage - 1) * sheetInfo.rowsPerPage;
-            var undoData = new UndoData('pasteRow');
+            var undoData = new UndoData('pasteRow', sheetInfo.currentPage);
             var rows = clipboardData.rows;
             for (var j = 0; j < rows.length; j++)
             {
@@ -1293,9 +1292,7 @@ function CellWindow(contactSheet)
                 var undoAction = new Object();
                 undoAction['contact-id'] = contactId; // 저장하면 contactId가 달라지므로, 저장 시에는 UndoData를 리셋해야한다.
                 undoAction['row-idx'] = rowIdx + offsetRow;
-                undoAction['page'] = sheetInfo.currentPage;
-                undoAction['fields'] = contact.getFields(sheetInfo.columnList);
-                undoAction['sort-info'] = sheetInfo.sortInfo;
+                undoAction['contact'] = contact;
 
                 undoData.addAction(undoAction);
             }

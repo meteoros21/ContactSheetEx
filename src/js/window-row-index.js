@@ -27,7 +27,7 @@ function RowIndexWindow(contactSheet)
     {
         this.dummyTableRow = $('<table></table>');
 
-        for (var j = 0; j < this.sheetInfo.rowsPerPage + 1; j++)
+        for (var j = 0; j < this.sheetInfo.rowsPerPage + 2; j++)
             this.dummyTableRow.append($('<tr><td></td></tr>'));
     }
 
@@ -75,9 +75,11 @@ function RowIndexWindow(contactSheet)
                 this.tableRow.find('tr:nth-child(' + idx + ')').after('<tr><td></td></tr>');
         }
 
-        for (var i = idx; i < this.tableRow[0].rows.length; i++)
+        var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
+
+        for (var i = idx; i < this.tableRow[0].rows.length-1; i++)
         {
-            this.tableRow[0].rows[i].cells[0].innerText = (i+1);
+            this.tableRow[0].rows[i].cells[0].innerText = (offset+i+1);
         }
     }
 
@@ -86,19 +88,20 @@ function RowIndexWindow(contactSheet)
         if (typeof count == 'undefined')
             count = 1;
 
-        var tr = this.tableRow.find('tr:last')[0];
-        var val = parseInt(tr.cells[0].innerText);
+        var lastIdx = this.tableRow[0].rows.length-2;
+        var val = parseInt(this.tableRow[0].rows[lastIdx].cells[0].innerText);
 
         for (var i = 0; i < count; i++)
-            this.tableRow.find('tr:last').after('<tr><td>' + (++val) + '</td></tr>');
+            this.tableRow.find('tr:last').before('<tr><td>' + (++val) + '</td></tr>');
     }
 
     this.deleteRow = function(idx)
     {
+        var offset = (this.sheetInfo.currentPage - 1) * this.sheetInfo.rowsPerPage;
         this.tableRow.find('tr:nth-child(' + (idx+1) + ')').remove();
-        for (var i = idx; i < this.tableRow[0].rows.length; i++)
+        for (var i = idx; i < this.tableRow[0].rows.length-1; i++)
         {
-            this.tableRow[0].rows[i].cells[0].innerText = (i+1);
+            this.tableRow[0].rows[i].cells[0].innerText = (offset+i+1);
         }
     }
 

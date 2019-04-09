@@ -49,6 +49,7 @@ body {
 .row-container {width: 100px; height: 100%; background-color: #fcfcfc; float: left; overflow: hidden}
 .tbl-row {border-spacing: 0; border: 0; width: 100%; min-height: 32px; padding: 1px; border-collapse: separate}
 .tbl-row td {width: 100%; height: 30px; border: 1px solid #eee; text-align: center; padding: 2px; vertical-align: middle; cursor: pointer; ; box-sizing: border-box}
+.tbl-row tr:last-child td {width: 100%; height: 30px; border: 0}
 .tbl-row .current-row {background-color: #E6E6FA !important}
 .tbl-row .modified {color: red !important;}
 

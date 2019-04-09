@@ -275,22 +275,31 @@ function ContactSheet()
         this.sheetInfo.columnWindow.addDraggableEvent();
     }
 
-    this.setPage = function(page)
+    this.setPage = function(page, callback)
     {
-        if (this.sheetInfo.currentPage == page || page < 1)
+        if (page < 1 || Math.ceil((this.sheetInfo.contactList.length + 1) / this.sheetInfo.rowsPerPage) < page)
             return;
 
-        if (Math.ceil((this.sheetInfo.contactList.length + 1) / this.sheetInfo.rowsPerPage) < page)
+        if (this.sheetInfo.currentPage === page)
+        {
+            if (typeof callback != 'undefined')
+                callback();
             return;
+        }
+
 
         var sheetInfo = this.sheetInfo;
+        sheetInfo.currentPage = page;
 
         showWaitScreen().then(function () {
 
-            sheetInfo.cellWindow.redraw(page);
             sheetInfo.rowIndexWindow.redraw(page);
+            sheetInfo.cellWindow.redraw(page);
             sheetInfo.cellWindow.setCurrentCell(0, 0);
             sheetInfo.pagerWindow.redraw(page);
+
+            if (typeof callback != 'undefined')
+                callback();
 
             hideWaitScreen();
         })
