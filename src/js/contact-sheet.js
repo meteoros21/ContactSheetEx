@@ -331,7 +331,9 @@ function ContactSheet()
         this.sheetInfo.contactList = contactList;
         this.sheetInfo.rowIndexWindow.redraw(1);
         this.sheetInfo.cellWindow.redraw(1);
-        //this.sheetInfo.pagingWindow.redraw(1);
+
+        this.sheetInfo.currentPage = 1;
+        this.sheetInfo.pagerWindow.redraw(this.sheetInfo.currentPage);
 
         this.sheetInfo.cellWindow.setCurrentCell(0, 0);
     }
